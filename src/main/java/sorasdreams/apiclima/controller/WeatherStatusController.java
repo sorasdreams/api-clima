@@ -25,7 +25,7 @@ public class WeatherStatusController {
 
     static final String BASE_URL = "https://geocoding-api.open-meteo.com";
 
-    final String PARAM_SEPARATOR = "&";
+    static final String PARAM_SEPARATOR = "&";
 
     private static final Logger log = LoggerFactory.getLogger(WeatherStatusController.class);
 
