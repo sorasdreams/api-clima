@@ -24,6 +24,9 @@ RUN set -eux \
 
 ENV LANG C.UTF-8
 ENV JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto
+COPY build/libs/api-clima-0.0.1-SNAPSHOT.jar .
 
 EXPOSE 8080
+
+CMD java -jar api-clima-0.0.1-SNAPSHOT.jar
 
