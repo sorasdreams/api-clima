@@ -7,12 +7,15 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import sorasdreams.apiclima.config.ApiProperties;
 import sorasdreams.apiclima.model.Language;
 import sorasdreams.apiclima.model.SearchResponse;
 import sorasdreams.apiclima.model.WeatherForecastResponse;
@@ -23,19 +26,17 @@ import java.util.Objects;
 @RestController
 public class WeatherStatusController {
 
-    static final String BASE_URL = "https://geocoding-api.open-meteo.com";
-
     static final String PARAM_SEPARATOR = "&";
-
     private static final Logger log = LoggerFactory.getLogger(WeatherStatusController.class);
 
-    /*
-    int cacheSize = 10 * 1024 * 1024;
+    @Autowired
+    private ApiProperties apiProperties;
 
-    File cacheDirectory = new File("src/test/resources/cache");
-    Cache cache = new Cache(cacheDirectory, cacheSize);
-    */
+    private final String API_BASE_URL;
 
+    public WeatherStatusController(){
+        API_BASE_URL = apiProperties.getApiBaseUrl();
+    }
 
     @PostMapping( "/v1/weather/search")
     @ResponseStatus(code = HttpStatus.OK)
@@ -45,7 +46,7 @@ public class WeatherStatusController {
 
         if(!city.isBlank()){
 
-            String geocodingApiUrl = BASE_URL + "/v1/search?name=" + city;
+            String geocodingApiUrl = API_BASE_URL + "/v1/search?name=" + city;
 
             if(Objects.nonNull(count) && count > 0){
                 geocodingApiUrl = geocodingApiUrl.concat(PARAM_SEPARATOR + "count=" + count);
@@ -74,7 +75,7 @@ public class WeatherStatusController {
                     //despues con las coordenadas tiene que consultar el clima
 
                   if(searchResponse.getLatitude() != 0 && searchResponse.getLongitude() != 0){
-                      String weatherApiUrl = BASE_URL + "/v1/forecast?latitude=" + searchResponse.getLatitude()
+                      String weatherApiUrl = API_BASE_URL + "/v1/forecast?latitude=" + searchResponse.getLatitude()
                               + PARAM_SEPARATOR + "longitude=" + searchResponse.getLongitude();
 
                       Request weatherRequest = new Request.Builder()
