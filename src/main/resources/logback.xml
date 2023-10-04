@@ -15,8 +15,24 @@
         </triggeringPolicy>
     </appender>
 
-    <logger name="sorasdreams.apiclima.controller.WeatherStatusController" level="DEBUG">
-        <appender-ref ref="WeatherStatusController"/>
+
+    <appender name="ExceptionHandlingController" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
+        <File>/var/log/apiclima/ExceptionHandlingController.log</File>
+        <encoder>
+            <pattern>%d{dd/MMM/yyyy HH:mm:ss} [%.20t] %-5p %c{1} - %m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <maxIndex>5</maxIndex>
+            <FileNamePattern>/var/log/apiclima/ExceptionHandlingController.log.%i</FileNamePattern>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>10MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <logger name="sorasdreams.apiclima.controller.ExceptionHandlingController" level="DEBUG">
+        <appender-ref ref="ExceptionHandlingController"/>
     </logger>
 
 </configuration>
