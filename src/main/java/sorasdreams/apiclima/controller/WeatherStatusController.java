@@ -14,6 +14,7 @@ import sorasdreams.apiclima.model.WeatherForecastResponse;
 import sorasdreams.apiclima.service.WeatherStatusService;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @RestController
 public class WeatherStatusController {
@@ -23,23 +24,24 @@ public class WeatherStatusController {
     @Autowired
     private WeatherStatusService weatherStatusService;
 
-    @PostMapping( "/v1/weather/search")
+    @PostMapping( "/v1/forecast/search")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<String> search(
+    public ResponseEntity<WeatherForecastResponse> search(
             @RequestParam String city, @RequestParam(required = false) Integer count,
             @RequestParam(required = false) String language){
 
         if(!city.isBlank()){
             //Se tiene que comunicar con la api de geocoding para obtener las coordenadas
             try {
-                SearchResponse searchResponse = weatherStatusService.searchCity(city, count, language);
+                Optional<SearchResponse> searchResponse = weatherStatusService.searchCity(city, count, language);
 
-                if (searchResponse != null && searchResponse.getLatitude() != 0 && searchResponse.getLongitude() != 0) {
+                if (searchResponse.isPresent() && searchResponse.get().getLatitude() != 0 && searchResponse.get().getLongitude() != 0) {
                     //despues con las coordenadas tiene que consultar el clima
-                    WeatherForecastResponse weatherForecastResponse = weatherStatusService
-                            .forecastByLatAndLong(searchResponse.getLatitude(),searchResponse.getLongitude());
-
-                    return ResponseEntity.status(HttpStatus.OK).body(weatherForecastResponse.toString());
+                    Optional<WeatherForecastResponse> weatherForecastResponse = weatherStatusService
+                            .forecastByLatAndLong(searchResponse.get().getLatitude(),searchResponse.get().getLongitude());
+                    if(weatherForecastResponse.isPresent()){
+                        return ResponseEntity.status(HttpStatus.OK).body(weatherForecastResponse.get());
+                    }
                 }
             } catch (IOException e){
                 log.error("Error al consultar la API del clima", e);
