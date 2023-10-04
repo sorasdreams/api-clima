@@ -4,11 +4,27 @@ import sorasdreams.apiclima.model.SearchResponse;
 import sorasdreams.apiclima.model.WeatherForecastResponse;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public interface WeatherStatusService {
 
-    SearchResponse searchCity(String city, Integer count, String language) throws IOException;
+    /**
+     * Searches for the given city on the weather api
+     * @param city to search
+     * @param count of cities if there is more than one
+     * @param language to translate the result, if there is no translation returns in english
+     * @return a SearchResponse with data or an empty optional if no data is found
+     * @throws IOException if an exception occurs during the execution
+     */
+    Optional<SearchResponse> searchCity(String city, Integer count, String language) throws IOException;
 
-    WeatherForecastResponse forecastByLatAndLong(float lat, float lon) throws IOException;
+    /**
+     * Gets the forecast for the given latitude and longitude
+     * @param lat the latitude
+     * @param lon the longitude
+     * @return a WeatherForecastResponse or an empty optional if no data is found
+     * @throws IOException if an exception occurs during the execution
+     */
+    Optional<WeatherForecastResponse> forecastByLatAndLong(float lat, float lon) throws IOException;
 
 }
