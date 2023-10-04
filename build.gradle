@@ -21,6 +21,8 @@ dependencies {
 	implementation 'com.squareup.okhttp3:okhttp:4.9.1'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.apache.commons:commons-lang3:3.13.0'
+	implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+
 
 	//redis
 	implementation 'redis.clients:jedis:4.3.1'
