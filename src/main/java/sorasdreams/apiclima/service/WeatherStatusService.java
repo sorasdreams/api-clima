@@ -1,9 +1,10 @@
 package sorasdreams.apiclima.service;
 
-import sorasdreams.apiclima.model.SearchResponse;
+import sorasdreams.apiclima.model.CityGeocodingData;
 import sorasdreams.apiclima.model.WeatherForecastResponse;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 public interface WeatherStatusService {
@@ -16,7 +17,7 @@ public interface WeatherStatusService {
      * @return a SearchResponse with data or an empty optional if no data is found
      * @throws IOException if an exception occurs during the execution
      */
-    Optional<SearchResponse> searchCity(String city, Integer count, String language) throws IOException;
+   List<CityGeocodingData>searchCity(String city, Integer count, String language) throws IOException;
 
     /**
      * Gets the forecast for the given latitude and longitude

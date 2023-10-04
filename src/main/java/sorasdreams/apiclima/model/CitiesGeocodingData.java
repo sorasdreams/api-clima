@@ -1,14 +1,23 @@
 package sorasdreams.apiclima.model;
 
-public class SearchResult {
+import java.util.Arrays;
 
-    private SearchResponse[] results;
+public class CitiesGeocodingData {
 
-    public SearchResponse[] getResults() {
+    private CityGeocodingData[] results;
+
+    public CityGeocodingData[] getResults() {
         return results;
     }
 
-    public void setResults(SearchResponse[] results) {
+    public void setResults(CityGeocodingData[] results) {
         this.results = results;
+    }
+
+    @Override
+    public String toString() {
+        return "CitiesGeocodingData{" +
+                "results=" + Arrays.toString(results) +
+                '}';
     }
 }

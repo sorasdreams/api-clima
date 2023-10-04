@@ -1,8 +1,10 @@
 package sorasdreams.apiclima.repository;
 
-import okhttp3.Response;
+import sorasdreams.apiclima.model.CitiesGeocodingData;
+import sorasdreams.apiclima.model.WeatherForecastResponse;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public interface WeatherStatusRepository {
     /**
@@ -10,10 +12,10 @@ public interface WeatherStatusRepository {
      * @param city to search
      * @param count of cities if there is more than one
      * @param language to translate the result, if there is no translation returns in english
-     * @return a SearchResponse with data or an empty optional if no data is found
+     * @return a SearchResult with data or an empty optional if no data is found
      * @throws IOException if an exception occurs during the execution
      */
-    Response getLatitudeAndLongitudeOfCity(String city , Integer count, String language) throws IOException;
+    Optional<CitiesGeocodingData> getCitiesGeocodingData(String city , Integer count, String language) throws IOException;
     /**
      * Gets the forecast for the given latitude and longitude
      * @param latitude the latitude
@@ -21,5 +23,5 @@ public interface WeatherStatusRepository {
      * @return a WeatherForecastResponse or an empty optional if no data is found
      * @throws IOException if an exception occurs during the execution
      */
-    Response getForecastByLatAndLong(float latitude, float longitude) throws IOException;
+    Optional<WeatherForecastResponse> getForecastByLatAndLong(float latitude, float longitude) throws IOException;
 }

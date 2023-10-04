@@ -1,6 +1,8 @@
 package sorasdreams.apiclima.model;
 
-public class SearchResponse {
+import java.util.Arrays;
+
+public class CityGeocodingData {
     private Integer id;
     private String name;
     private float latitude;
@@ -180,5 +182,31 @@ public class SearchResponse {
 
     public void setPostcodes(String[] postcodes) {
         this.postcodes = postcodes;
+    }
+
+    @Override
+    public String toString() {
+        return "CityGeocodingData{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", elevation=" + elevation +
+                ", feature_code='" + feature_code + '\'' +
+                ", country_code='" + country_code + '\'' +
+                ", admin1_id=" + admin1_id +
+                ", admin2_id=" + admin2_id +
+                ", admin3_id=" + admin3_id +
+                ", admin4_id=" + admin4_id +
+                ", admin1='" + admin1 + '\'' +
+                ", admin2='" + admin2 + '\'' +
+                ", admin3='" + admin3 + '\'' +
+                ", admin4='" + admin4 + '\'' +
+                ", timezone='" + timezone + '\'' +
+                ", population=" + population +
+                ", country_id=" + country_id +
+                ", country='" + country + '\'' +
+                ", postcodes=" + Arrays.toString(postcodes) +
+                '}';
     }
 }

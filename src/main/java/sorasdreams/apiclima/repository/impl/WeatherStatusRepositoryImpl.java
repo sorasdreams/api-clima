@@ -1,8 +1,7 @@
 package sorasdreams.apiclima.repository.impl;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.FormBody;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,9 @@ import org.springframework.stereotype.Repository;
 import redis.clients.jedis.JedisPooled;
 import sorasdreams.apiclima.client.HttpClient;
 import sorasdreams.apiclima.config.ApiProperties;
+import sorasdreams.apiclima.model.CitiesGeocodingData;
 import sorasdreams.apiclima.model.Language;
+import sorasdreams.apiclima.model.WeatherForecastResponse;
 import sorasdreams.apiclima.repository.WeatherStatusRepository;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Repository
@@ -30,7 +32,8 @@ public class WeatherStatusRepositoryImpl implements WeatherStatusRepository {
     private static final String FORECAST_ENDPOINT = "/v1/forecast";
     private final HttpClient client;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false)
+            .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES,false);
 
     @Autowired
     private JedisPooled jedisPooled;
@@ -46,16 +49,7 @@ public class WeatherStatusRepositoryImpl implements WeatherStatusRepository {
      * {@inheritDoc}
      */
     @Override
-    public Response getLatitudeAndLongitudeOfCity(String city, Integer count, String language) throws IOException {
-
-        final String key = city + PARAM_SEPARATOR + count + PARAM_SEPARATOR + language;
-
-        String responseFromRedis = getValueFromRedis(key);
-
-        if(StringUtils.isNotBlank(responseFromRedis) && !responseFromRedis.equals("nil")){
-            return objectMapper.readValue(responseFromRedis, Response.class);
-        }
-
+    public Optional<CitiesGeocodingData> getCitiesGeocodingData(String city, Integer count, String language) throws IOException {
         List<String> params = new ArrayList<>();
 
         //La ciudad siempre va a estar
@@ -70,68 +64,49 @@ public class WeatherStatusRepositoryImpl implements WeatherStatusRepository {
 
         String geocodingApiUrl = getEndpointWithBaseUrlAndParams(SEARCH_ENDPOINT, params.toArray(new String[0])) ;
 
-        Response r = client.doRequest(geocodingApiUrl);
-        if(r.code() < 400){
-            jedisPooled.setex(geocodingApiUrl, TimeUnit.SECONDS.convert(Duration.ofMinutes(10)), r.toString());
+        String responseFromRedis = getValueFromRedis(geocodingApiUrl);
+
+        if(StringUtils.isNotBlank(responseFromRedis) && !responseFromRedis.equals("nil")){
+            return Optional.of(objectMapper.readValue(responseFromRedis, CitiesGeocodingData.class));
         }
 
-        return r;
+        Response r = client.doRequest(geocodingApiUrl);
+
+        if(r.body() != null && r.code() < 400){
+            CitiesGeocodingData citiesGeocodingData = objectMapper.readValue(r.body().string(), CitiesGeocodingData.class);
+            jedisPooled.setex(geocodingApiUrl, TimeUnit.SECONDS.convert(Duration.ofMinutes(10)), citiesGeocodingData.toString());
+            return Optional.of(citiesGeocodingData);
+        }
+
+        return Optional.empty();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Response getForecastByLatAndLong(float latitude, float longitude) throws IOException {
-        final String key = latitude + PARAM_SEPARATOR + longitude;
-        String responseFromRedis = getValueFromRedis(key);
+    public Optional<WeatherForecastResponse> getForecastByLatAndLong(float latitude, float longitude) throws IOException {
+        final String url = getEndpointWithBaseUrlAndParams(FORECAST_ENDPOINT,"latitude="
+                + latitude,"longitude=" + longitude).concat("&hourly=temperature_2m");
+
+        String responseFromRedis = getValueFromRedis(url);
 
         if(StringUtils.isNotBlank(responseFromRedis) && !responseFromRedis.equals("nil")){
-            return objectMapper.readValue(responseFromRedis, Response.class);
+            return Optional.of(objectMapper.readValue(responseFromRedis, WeatherForecastResponse.class));
         }
-
-       // RequestBody requestBody = createRequestBody(latitude, longitude);
-
-        final String url = getEndpointWithBaseUrlAndParams(FORECAST_ENDPOINT,"latitude="
-                + latitude,"longitude=" + longitude);
-
         Response r = client.doRequest(url);
 
-        if(r.code() < 400){
-            jedisPooled.setex(url, TimeUnit.SECONDS.convert(Duration.ofMinutes(10)), r.toString());
+        if(r.body() != null && r.code() < 400){
+            WeatherForecastResponse weatherForecastResponse = objectMapper.readValue(r.body().string(), WeatherForecastResponse.class);
+            jedisPooled.setex(url, TimeUnit.SECONDS.convert(Duration.ofMinutes(10)), weatherForecastResponse.toString());
+            return Optional.of(weatherForecastResponse);
         }
 
-        return r;
+        return Optional.empty();
     }
 
     private String getValueFromRedis(String key){
         return jedisPooled.get(key);
-    }
-
-    private RequestBody createRequestBody(String city){
-        return new FormBody.Builder().add("name",city).build();
-    }
-
-    private RequestBody createRequestBody(String city, Integer count){
-        return new FormBody.Builder().add("name",city).add("count", String.valueOf(count)).build();
-    }
-
-    private RequestBody createRequestBody(String city, Integer count, String language){
-        return new FormBody.Builder().add("name",city)
-                .add("count", String.valueOf(count))
-                .add("language", language)
-                .build();
-    }
-
-    private RequestBody createRequestBody(String city, String language){
-        return new FormBody.Builder().add("name",city).add("language", language)
-                .build();
-    }
-
-    private RequestBody createRequestBody(float latitude, float longitude){
-        return new FormBody.Builder().add("latitude", String.valueOf(latitude))
-                .add("longitude", String.valueOf(longitude))
-                .build();
     }
 
     private String getEndpointWithBaseUrlAndParams(String endpoint, String... params){

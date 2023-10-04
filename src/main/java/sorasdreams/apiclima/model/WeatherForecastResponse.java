@@ -1,5 +1,9 @@
 package sorasdreams.apiclima.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Arrays;
+
 public class WeatherForecastResponse {
     private float latitude;
     private float longitude;
@@ -8,9 +12,28 @@ public class WeatherForecastResponse {
     private Integer utc_offset_seconds;
     private String timezone;
     private String timezone_abbreviation;
-    Hourly HourlyObject;
-    Hourly_units Hourly_unitsObject;
-    Current_weather Current_weatherObject;
+    @JsonProperty("hourly")
+    private Hourly HourlyObject;
+    @JsonProperty("hourly_units")
+    private Hourly_units Hourly_unitsObject;
+    @JsonProperty("current_weather")
+    private Current_weather Current_weatherObject;
+
+    @Override
+    public String toString() {
+        return "WeatherForecastResponse{" +
+                "latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", elevation=" + elevation +
+                ", generationtime_ms=" + generationtime_ms +
+                ", utc_offset_seconds=" + utc_offset_seconds +
+                ", timezone='" + timezone + '\'' +
+                ", timezone_abbreviation='" + timezone_abbreviation + '\'' +
+                ", HourlyObject=" + HourlyObject +
+                ", Hourly_unitsObject=" + Hourly_unitsObject +
+                ", Current_weatherObject=" + Current_weatherObject +
+                '}';
+    }
 
     public float getLatitude() {
         return latitude;
@@ -99,6 +122,17 @@ public class WeatherForecastResponse {
         private float windspeed;
         private float winddirection;
 
+        @Override
+        public String toString() {
+            return "Current_weather{" +
+                    "time='" + time + '\'' +
+                    ", temperature=" + temperature +
+                    ", weathercode=" + weathercode +
+                    ", windspeed=" + windspeed +
+                    ", winddirection=" + winddirection +
+                    '}';
+        }
+
         public String getTime() {
             return time;
         }
@@ -143,6 +177,13 @@ public class WeatherForecastResponse {
     public class Hourly_units {
         private String temperature_2m;
 
+        @Override
+        public String toString() {
+            return "Hourly_units{" +
+                    "temperature_2m='" + temperature_2m + '\'' +
+                    '}';
+        }
+
         public String getTemperature_2m() {
             return temperature_2m;
         }
@@ -155,6 +196,14 @@ public class WeatherForecastResponse {
     public class Hourly {
         String[] time;
         float[] temperature_2m;
+
+        @Override
+        public String toString() {
+            return "Hourly{" +
+                    "time=" + Arrays.toString(time) +
+                    ", temperature_2m=" + Arrays.toString(temperature_2m) +
+                    '}';
+        }
 
         public String[] getTime() {
             return time;

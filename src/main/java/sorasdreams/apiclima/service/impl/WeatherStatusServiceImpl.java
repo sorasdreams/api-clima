@@ -1,16 +1,17 @@
 package sorasdreams.apiclima.service.impl;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.Response;
 import org.springframework.stereotype.Service;
-import sorasdreams.apiclima.model.SearchResponse;
-import sorasdreams.apiclima.model.SearchResult;
+import sorasdreams.apiclima.model.CityGeocodingData;
+import sorasdreams.apiclima.model.CitiesGeocodingData;
 import sorasdreams.apiclima.model.WeatherForecastResponse;
 import sorasdreams.apiclima.repository.WeatherStatusRepository;
 import sorasdreams.apiclima.service.WeatherStatusService;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,8 +20,6 @@ public class WeatherStatusServiceImpl implements WeatherStatusService {
 
     private final WeatherStatusRepository weatherStatusRepository;
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public WeatherStatusServiceImpl(WeatherStatusRepository weatherStatusRepository){
         this.weatherStatusRepository = weatherStatusRepository;
@@ -30,27 +29,28 @@ public class WeatherStatusServiceImpl implements WeatherStatusService {
      * {@inheritDoc}
      */
     @Override
-    public Optional<SearchResponse> searchCity(String city, Integer count, String language) throws IOException {
+    public List<CityGeocodingData> searchCity(String city, Integer count, String language) throws IOException {
+        boolean hasCount =Objects.nonNull(count);
 
-       Response response = weatherStatusRepository.getLatitudeAndLongitudeOfCity(city, count, language);
-        if(response.body() != null) {
-          SearchResult searchResult = objectMapper.readValue(response.body().string(), SearchResult.class);
+        if(hasCount && count == 0){
+            throw new IllegalArgumentException("La cantidad de resultados a mostrar no puede ser 0");
+        }
 
-          if(Objects.isNull(count)){
-              return Optional.of(searchResult.getResults()[0]);
-          }
-          //Ver de devolver la lista y en caso que no se haya pasado el count solo devolver la lista con el primer valor
+       Optional<CitiesGeocodingData> citiesGeocodingDataOptional = weatherStatusRepository.getCitiesGeocodingData(city, count, language);
+        if(citiesGeocodingDataOptional.isPresent()) {
+            CitiesGeocodingData citiesGeocodingData = citiesGeocodingDataOptional.get();
 
-          if(count > 0){
-
-          }
-          for(SearchResponse searchResponse : searchResult.getResults()){
-              //Devolvemos el primer resultado
-
+          //Si no hay cantidad a mostrar entonces solo devuelvo el primer valor si lo hubiera
+          if(!hasCount && citiesGeocodingData.getResults().length > 0){
+            return Collections.singletonList(citiesGeocodingData.getResults()[0]);
+          } else if (hasCount && citiesGeocodingData.getResults().length == 0){
+              return new ArrayList<>();
+          } else if (hasCount && citiesGeocodingData.getResults().length > 0){
+              return getResultsToShowByCount(citiesGeocodingData.getResults(),count);
           }
         }
 
-        return Optional.empty();
+        return new ArrayList<>();
     }
 
     /**
@@ -58,11 +58,13 @@ public class WeatherStatusServiceImpl implements WeatherStatusService {
      */
     @Override
     public Optional<WeatherForecastResponse> forecastByLatAndLong(float lat, float lon) throws IOException {
-        Response responseForecast = weatherStatusRepository.getForecastByLatAndLong(lat, lon);
+        return weatherStatusRepository.getForecastByLatAndLong(lat, lon);
+    }
 
-        if(responseForecast.body() != null){
-            return Optional.of(objectMapper.readValue(responseForecast.body().string(), WeatherForecastResponse.class));
+    private List<CityGeocodingData> getResultsToShowByCount(CityGeocodingData[] searchRespons, Integer count){
+        if(count > searchRespons.length){
+            throw new ArrayIndexOutOfBoundsException("La cantidad de resultados a mostrar no puede ser mayor al total de resultados que devolvio la API");
         }
-        return Optional.empty();
+        return Arrays.asList(searchRespons).subList(0,count);
     }
 }
