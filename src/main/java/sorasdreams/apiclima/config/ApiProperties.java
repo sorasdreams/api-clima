@@ -4,15 +4,19 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource(value = {"classpath:application-${enviroment}.properties"})
+@Profile("snd")
+@PropertySource(value = {"classpath:application-${environment}.properties"})
 public class ApiProperties implements InitializingBean, DisposableBean {
 
-    @Value("weather.api.baseurl:https://geocoding-api.open-meteo.com")
-    private String apiBaseUrl;
+    @Value("${geocoding.api.baseurl}")
+    private String geocodingApiBaseUrl;
 
+    @Value("${forecast.api.baseurl}")
+    private String forecastApiUrl;
 
     @Override
     public void destroy() throws Exception {
@@ -24,7 +28,11 @@ public class ApiProperties implements InitializingBean, DisposableBean {
 
     }
 
-    public String getApiBaseUrl() {
-        return apiBaseUrl;
+    public String getGeocodingApiBaseUrl() {
+        return geocodingApiBaseUrl;
+    }
+
+    public String getForecastApiUrl() {
+        return forecastApiUrl;
     }
 }
